@@ -6,7 +6,7 @@ import { FC, useContext, useEffect, useRef, useState } from 'react';
 import EventShiftDetails from './EventShiftDetails';
 import EventShiftTime from './EventShiftTime';
 import messageIds from 'features/events/l10n/messageIds';
-import useCreateEvent from 'features/events/hooks/useCreateEvent';
+import useCreateEvents from 'features/events/hooks/useCreateEvents';
 import { Msg, useMessages } from 'core/i18n';
 import useNumericRouteParams from 'core/hooks/useNumericRouteParams';
 import { ZetkinEvent } from 'utils/types/zetkin';
@@ -48,7 +48,7 @@ const EventShiftModal: FC<EventShiftModalProps> = ({ close, dates, open }) => {
     false,
   ]);
 
-  const createEvent = useCreateEvent(orgId);
+  const createEvents = useCreateEvents(orgId);
   const mountedRef = useRef(false);
   const submittingRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
@@ -73,7 +73,7 @@ const EventShiftModal: FC<EventShiftModalProps> = ({ close, dates, open }) => {
     submittingRef.current = true;
     setSubmitting(true);
     try {
-      await Promise.all(
+      await createEvents(
         eventShifts.map((shift, index) => {
           const endTime =
             index < eventShifts.length - 1
@@ -102,23 +102,20 @@ const EventShiftModal: FC<EventShiftModalProps> = ({ close, dates, open }) => {
           const now = new Date();
           const published = startDate < now ? startDate : now;
 
-          return createEvent(
-            {
-              activity_id: type ? type.id : null,
-              campaign_id: projectId,
-              end_time: endDate.toISOString(),
-              info_text: eventDescription,
-              location_id: locationId,
-              num_participants_required: eventParticipants
-                ? eventParticipants
-                : 0,
-              published: publish ? published.toISOString() : null,
-              start_time: startDate.toISOString(),
-              title: eventTitle || null,
-              url: eventLink,
-            },
-            false
-          );
+          return {
+            activity_id: type ? type.id : null,
+            campaign_id: projectId,
+            end_time: endDate.toISOString(),
+            info_text: eventDescription,
+            location_id: locationId,
+            num_participants_required: eventParticipants
+              ? eventParticipants
+              : 0,
+            published: publish ? published.toISOString() : null,
+            start_time: startDate.toISOString(),
+            title: eventTitle || null,
+            url: eventLink,
+          };
         })
       );
 

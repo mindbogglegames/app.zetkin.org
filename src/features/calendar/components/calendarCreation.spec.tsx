@@ -24,6 +24,7 @@ import {
   within,
 } from 'utils/testing';
 import useCreateEvent from 'features/events/hooks/useCreateEvent';
+import useCreateEvents from 'features/events/hooks/useCreateEvents';
 import useMonthCalendarEvents from '../hooks/useMonthCalendarEvents';
 import useNumericRouteParams from 'core/hooks/useNumericRouteParams';
 import useWeekCalendarEvents from '../hooks/useWeekCalendarEvents';
@@ -32,6 +33,7 @@ import mockEvent from 'utils/testing/mocks/mockEvent';
 import { CLUSTER_TYPE } from 'features/projects/hooks/useClusteredActivities';
 
 jest.mock('features/events/hooks/useCreateEvent');
+jest.mock('features/events/hooks/useCreateEvents');
 jest.mock('../hooks/useMonthCalendarEvents');
 jest.mock('../hooks/useWeekCalendarEvents');
 jest.mock('core/hooks/useNumericRouteParams');
@@ -79,6 +81,7 @@ jest.mock('./EventShiftModal/EventShiftDetails', () => {
 });
 
 const createEvent = jest.fn<ReturnType<typeof useCreateEvent>>();
+const createEvents = jest.fn<ReturnType<typeof useCreateEvents>>();
 const showSnackbar = jest.fn();
 const onClickDay = jest.fn();
 const onClickWeek = jest.fn();
@@ -131,6 +134,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   createEvent.mockReset().mockResolvedValue(mockEvent());
   jest.mocked(useCreateEvent).mockReturnValue(createEvent);
+  createEvents.mockReset().mockResolvedValue([mockEvent(), mockEvent()]);
+  jest.mocked(useCreateEvents).mockReturnValue(createEvents);
   jest
     .mocked(useNumericRouteParams)
     .mockReturnValue({ orgId: 14, projectId: 559 });
@@ -301,41 +306,35 @@ describe('Month calendar creation', () => {
           name: /feat.events.eventShiftModal.draft/i,
         })
       );
-      expect(createEvent).toHaveBeenCalledTimes(2);
-      expect(createEvent).toHaveBeenNthCalledWith(
-        1,
+      expect(createEvents).toHaveBeenCalledTimes(1);
+      expect(createEvents).toHaveBeenCalledWith([
         expect.objectContaining({
           campaign_id: 559,
           end_time: `${date}T09:30:00.000Z`,
           published: null,
           start_time: `${date}T09:00:00.000Z`,
         }),
-        false
-      );
-      expect(createEvent).toHaveBeenNthCalledWith(
-        2,
         expect.objectContaining({
           end_time: `${date}T10:00:00.000Z`,
           start_time: `${date}T09:30:00.000Z`,
         }),
-        false
-      );
+      ]);
     }
   );
 
   it('blocks duplicate shift submissions and restores the form after failure', async () => {
     let rejectRequest!: (reason: Error) => void;
-    const request = new Promise<ReturnType<typeof mockEvent>>((_, reject) => {
+    const request = new Promise<ReturnType<typeof mockEvent>[]>((_, reject) => {
       rejectRequest = reject;
     });
-    createEvent.mockReturnValueOnce(request).mockReturnValueOnce(request);
+    createEvents.mockReturnValueOnce(request);
     render(monthView());
     await openShifts('2026-09-16');
     const saveButton = screen.getByRole('button', {
       name: /feat.events.eventShiftModal.draft/i,
     });
     await user.dblClick(saveButton);
-    expect(createEvent).toHaveBeenCalledTimes(2);
+    expect(createEvents).toHaveBeenCalledTimes(1);
     expect((saveButton as HTMLButtonElement).disabled).toBe(true);
     await act(async () => rejectRequest(new Error('Request failed')));
     expect(showSnackbar).toHaveBeenCalledWith(
@@ -343,7 +342,7 @@ describe('Month calendar creation', () => {
       'feat.events.eventShiftModal.error'
     );
     await user.click(saveButton);
-    expect(createEvent).toHaveBeenCalledTimes(4);
+    expect(createEvents).toHaveBeenCalledTimes(2);
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
@@ -355,15 +354,15 @@ describe('Month calendar creation', () => {
   ])(
     'preserves the new form on $date when a dismissed save reports $outcome',
     async ({ date, outcome }) => {
-      let resolveRequest!: (event: ReturnType<typeof mockEvent>) => void;
+      let resolveRequest!: (events: ReturnType<typeof mockEvent>[]) => void;
       let rejectRequest!: (reason: Error) => void;
-      const request = new Promise<ReturnType<typeof mockEvent>>(
+      const request = new Promise<ReturnType<typeof mockEvent>[]>(
         (resolve, reject) => {
           resolveRequest = resolve;
           rejectRequest = reject;
         }
       );
-      createEvent.mockReturnValueOnce(request).mockReturnValueOnce(request);
+      createEvents.mockReturnValueOnce(request);
       const { rerender } = render(monthView());
       await openShifts('2026-09-16');
       await user.click(
@@ -371,7 +370,7 @@ describe('Month calendar creation', () => {
           name: /feat.events.eventShiftModal.draft/i,
         })
       );
-      expect(createEvent).toHaveBeenCalledTimes(2);
+      expect(createEvents).toHaveBeenCalledTimes(1);
       await user.click(screen.getByTestId('CloseIcon'));
       await act(async () => rerender(monthView(date)));
       await openShifts(date);
@@ -382,7 +381,7 @@ describe('Month calendar creation', () => {
 
       await act(async () => {
         if (outcome === 'success') {
-          resolveRequest(mockEvent());
+          resolveRequest([mockEvent(), mockEvent()]);
         } else {
           rejectRequest(new Error('Request failed'));
         }
@@ -392,7 +391,7 @@ describe('Month calendar creation', () => {
       expect(screen.getByLabelText('Event date').textContent).toBe(date);
       expect((titleInput as HTMLInputElement).value).toBe('New unsaved form');
       expect(document.activeElement).toBe(titleInput);
-      expect(createEvent).toHaveBeenCalledTimes(2);
+      expect(createEvents).toHaveBeenCalledTimes(1);
       expect(showSnackbar).toHaveBeenCalledTimes(1);
       expect(showSnackbar).toHaveBeenCalledWith(
         outcome,
@@ -413,7 +412,7 @@ describe('Month calendar creation', () => {
           name: new RegExp(`feat.events.eventShiftModal.${action}`, 'i'),
         })
       );
-      expect(createEvent).toHaveBeenCalledTimes(2);
+      expect(createEvents).toHaveBeenCalledTimes(1);
       expect(screen.queryByRole('dialog')).toBeNull();
       expect(document.activeElement).toBe(createButton('2026-09-16'));
       expect(showSnackbar).toHaveBeenCalledWith('success', expect.anything());
@@ -431,7 +430,7 @@ describe('Month calendar creation', () => {
     expect(
       (screen.getByLabelText('Event title') as HTMLInputElement).value
     ).toBe('');
-    expect(createEvent).not.toHaveBeenCalled();
+    expect(createEvents).not.toHaveBeenCalled();
   });
 
   it('clears the dropdown and shift dialog when navigating to another month', async () => {
@@ -443,6 +442,7 @@ describe('Month calendar creation', () => {
     await act(async () => rerender(monthView('2026-11-16')));
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(createEvent).not.toHaveBeenCalled();
+    expect(createEvents).not.toHaveBeenCalled();
   });
 });
 
@@ -519,6 +519,6 @@ describe('Week calendar shared creation menu', () => {
       })
     );
     expect(screen.getByRole('dialog')).toBeTruthy();
-    expect(createEvent).not.toHaveBeenCalled();
+    expect(createEvents).not.toHaveBeenCalled();
   });
 });
