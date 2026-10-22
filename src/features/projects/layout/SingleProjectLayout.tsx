@@ -33,6 +33,13 @@ const SingleProjectLayout: FunctionComponent<SingleProjectLayoutProps> = ({
     return null;
   }
 
+  const startDate = firstEvent ? removeOffset(firstEvent.start_time) : null;
+  const endDate = lastEvent ? removeOffset(lastEvent.end_time) : null;
+  const spansMultipleYears =
+    !!startDate &&
+    !!endDate &&
+    new Date(startDate).getFullYear() != new Date(endDate).getFullYear();
+
   return (
     <TabbedLayout
       actionButtons={<ProjectActionButtons project={project} />}
@@ -43,18 +50,19 @@ const SingleProjectLayout: FunctionComponent<SingleProjectLayoutProps> = ({
         <Box sx={{ alignItems: 'center', display: 'flex', gap: 1 }}>
           <ProjectStatusChip project={project} />
           <Box>
-            {firstEvent && lastEvent ? (
+            {startDate && endDate ? (
               <>
                 <FormattedDate
                   day="2-digit"
                   month="long"
-                  value={removeOffset(firstEvent.start_time)}
+                  value={startDate}
+                  year={spansMultipleYears ? 'numeric' : undefined}
                 />
                 {` - `}
                 <FormattedDate
                   day="2-digit"
                   month="long"
-                  value={removeOffset(lastEvent.end_time)}
+                  value={endDate}
                   year="numeric"
                 />
               </>
