@@ -285,6 +285,10 @@ export default makeMessages('feat.surveys', {
     error: m(
       'Something went wrong when submitting your answers. Please try again later.'
     ),
+    expired: {
+      description: m('This survey no longer accepts submissions.'),
+      title: m('This survey is closed'),
+    },
     policy: {
       text: m('Click to read the full Zetkin Privacy Policy'),
     },
