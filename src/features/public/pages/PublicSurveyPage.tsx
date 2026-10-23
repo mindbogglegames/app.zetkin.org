@@ -110,7 +110,8 @@ const PublicSurveyPage: FC<PublicSurveyPageProps> = ({
     }
   }, [status]);
 
-  const showForm = status == 'editing' || status == 'error';
+  const isExpired = !!survey.expires && new Date(survey.expires) < new Date();
+  const showForm = !isExpired && (status == 'editing' || status == 'error');
   const showSuccess = status == 'submitted';
   const showErrorAlert = status == 'error';
 
@@ -121,6 +122,13 @@ const PublicSurveyPage: FC<PublicSurveyPageProps> = ({
           maxWidth: isMobile ? '100dvw' : '37.5rem',
         }}
       >
+        {isExpired && (
+          <ZUIAlert
+            description={messages.surveyForm.expired.description()}
+            severity="info"
+            title={messages.surveyForm.expired.title()}
+          />
+        )}
         {showErrorAlert && (
           <Box ref={errorMessageRef} data-testid="Survey-error" role="alert">
             <ZUIAlert severity="error" title={messages.surveyForm.error()} />
