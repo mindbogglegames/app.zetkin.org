@@ -20,19 +20,22 @@ import { findOrAddItem } from 'utils/storeUtils/findOrAddItem';
 
 export interface CanvassStoreSlice {
   householdsByLocationId: Record<number, RemoteList<HouseholdWithColor>>;
+  locationVisitsByAssignmentAndLocationId: Record<
+    number,
+    Record<number, RemoteList<ZetkinLocationVisit>>
+  >;
   myAssignmentsList: RemoteList<ZetkinAreaAssignment>;
   visitsByAssignmentAndLocationId: Record<
     number,
     Record<number, RemoteList<ZetkinHouseholdVisit>>
   >;
-  visitsByAssignmentId: Record<string, RemoteList<ZetkinLocationVisit>>;
 }
 
 const initialState: CanvassStoreSlice = {
   householdsByLocationId: {},
+  locationVisitsByAssignmentAndLocationId: {},
   myAssignmentsList: remoteList(),
   visitsByAssignmentAndLocationId: {},
-  visitsByAssignmentId: {},
 };
 
 const canvassSlice = createSlice({
@@ -201,54 +204,72 @@ const canvassSlice = createSlice({
     },
     visitCreated: (state, action: PayloadAction<ZetkinLocationVisit>) => {
       const visit = action.payload;
-      const assignmentId = visit.assignment_id;
-      if (!state.visitsByAssignmentId[assignmentId]) {
-        state.visitsByAssignmentId[assignmentId] = remoteList();
-      }
+      const { assignment_id: assignmentId, location_id: locationId } = visit;
+      state.locationVisitsByAssignmentAndLocationId[assignmentId] ||= {};
+      state.locationVisitsByAssignmentAndLocationId[assignmentId][
+        locationId
+      ] ||= remoteList();
 
-      state.visitsByAssignmentId[assignmentId].items.push(
-        remoteItem(visit.id, { data: visit })
-      );
+      state.locationVisitsByAssignmentAndLocationId[assignmentId][
+        locationId
+      ].items.push(remoteItem(visit.id, { data: visit }));
     },
     visitUpdated: (state, action: PayloadAction<ZetkinLocationVisit>) => {
       const visit = action.payload;
-      const assignmentId = visit.assignment_id;
+      const { assignment_id: assignmentId, location_id: locationId } = visit;
 
-      state.visitsByAssignmentId[assignmentId] ||= remoteList();
+      state.locationVisitsByAssignmentAndLocationId[assignmentId] ||= {};
+      state.locationVisitsByAssignmentAndLocationId[assignmentId][
+        locationId
+      ] ||= remoteList();
       const item = findOrAddItem(
-        state.visitsByAssignmentId[assignmentId],
+        state.locationVisitsByAssignmentAndLocationId[assignmentId][locationId],
         visit.id
       );
       item.data = visit;
       item.isLoading = false;
       item.loaded = new Date().toISOString();
     },
-    visitsError: (state, action: PayloadAction<[number, string]>) => {
-      const [assignmentId, error] = action.payload;
+    visitsError: (state, action: PayloadAction<[number, number, string]>) => {
+      const [assignmentId, locationId, error] = action.payload;
 
-      const list = (state.visitsByAssignmentId[assignmentId] ||=
-        remoteListCreated());
+      state.locationVisitsByAssignmentAndLocationId[assignmentId] ||= {};
+      const list = (state.locationVisitsByAssignmentAndLocationId[assignmentId][
+        locationId
+      ] ||= remoteListCreated());
 
       list.error = error;
       list.isLoading = false;
       list.loaded = new Date().toISOString();
     },
-    visitsInvalidated: (state, action: PayloadAction<number>) => {
-      const assignmentId = action.payload;
-      state.visitsByAssignmentId[assignmentId].isStale = true;
+    visitsInvalidated: (state, action: PayloadAction<[number, number]>) => {
+      const [assignmentId, locationId] = action.payload;
+      const list =
+        state.locationVisitsByAssignmentAndLocationId[assignmentId]?.[
+          locationId
+        ];
+      if (list) {
+        list.isStale = true;
+      }
     },
-    visitsLoad: (state, action: PayloadAction<number>) => {
-      state.visitsByAssignmentId[action.payload] = remoteList();
-      state.visitsByAssignmentId[action.payload].isLoading = true;
+    visitsLoad: (state, action: PayloadAction<[number, number]>) => {
+      const [assignmentId, locationId] = action.payload;
+      state.locationVisitsByAssignmentAndLocationId[assignmentId] ||= {};
+      state.locationVisitsByAssignmentAndLocationId[assignmentId][locationId] =
+        remoteListLoad(
+          state.locationVisitsByAssignmentAndLocationId[assignmentId][
+            locationId
+          ]
+        );
     },
     visitsLoaded: (
       state,
-      action: PayloadAction<[number, ZetkinLocationVisit[]]>
+      action: PayloadAction<[number, number, ZetkinLocationVisit[]]>
     ) => {
-      const [locationId, visits] = action.payload;
-      state.visitsByAssignmentId[locationId] = remoteList(visits);
-      state.visitsByAssignmentId[locationId].isLoading = false;
-      state.visitsByAssignmentId[locationId].loaded = new Date().toISOString();
+      const [assignmentId, locationId, visits] = action.payload;
+      state.locationVisitsByAssignmentAndLocationId[assignmentId] ||= {};
+      state.locationVisitsByAssignmentAndLocationId[assignmentId][locationId] =
+        remoteListLoaded(visits);
     },
   },
 });

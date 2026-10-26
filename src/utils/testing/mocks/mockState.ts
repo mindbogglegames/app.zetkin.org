@@ -42,9 +42,9 @@ export default function mockState(overrides?: RootState) {
     },
     canvass: {
       householdsByLocationId: {},
+      locationVisitsByAssignmentAndLocationId: {},
       myAssignmentsList: remoteList(),
       visitsByAssignmentAndLocationId: {},
-      visitsByAssignmentId: {},
     },
     duplicates: {
       detailedPersonsList: {},

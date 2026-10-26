@@ -12,13 +12,18 @@ export default function useLocationVisits(
 ) {
   const apiClient = useApiClient();
   const visitList = useAppSelector(
-    (state) => state.canvass.visitsByAssignmentId[assignmentId]
+    (state) =>
+      state.canvass.locationVisitsByAssignmentAndLocationId[assignmentId]?.[
+        locationId
+      ]
   );
 
-  const visits = useRemoteList(visitList, {
-    actionOnError: (err) => visitsError([assignmentId, serializeError(err)]),
-    actionOnLoad: () => visitsLoad(assignmentId),
-    actionOnSuccess: (items) => visitsLoaded([assignmentId, items]),
+  return useRemoteList(visitList, {
+    actionOnError: (err) =>
+      visitsError([assignmentId, locationId, serializeError(err)]),
+    actionOnLoad: () => visitsLoad([assignmentId, locationId]),
+    actionOnSuccess: (items) => visitsLoaded([assignmentId, locationId, items]),
+    cacheKey: `loadLocationVisits-${assignmentId}-${locationId}`,
     loader: () =>
       fetchAllPaginated<ZetkinLocationVisit>((page) =>
         apiClient.get(
@@ -26,6 +31,4 @@ export default function useLocationVisits(
         )
       ),
   });
-
-  return visits.filter((visit) => visit.location_id == locationId);
 }
