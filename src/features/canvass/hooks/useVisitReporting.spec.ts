@@ -34,8 +34,11 @@ describe('useVisitReporting()', () => {
       initialState.canvass.visitsByAssignmentAndLocationId[ASSIGNMENT_ID] = {
         [LOCATION_ID]: remoteListLoaded([]),
       };
-      initialState.canvass.visitsByAssignmentId[ASSIGNMENT_ID] =
-        remoteListLoaded([]);
+      initialState.canvass.locationVisitsByAssignmentAndLocationId[
+        ASSIGNMENT_ID
+      ] = {
+        [LOCATION_ID]: remoteListLoaded([]),
+      };
       initialState.areaAssignments.areaAssignmentList.items.push(
         remoteItem(ASSIGNMENT_ID, {
           data: mockAreaAssignment({
@@ -217,8 +220,11 @@ describe('useVisitReporting()', () => {
       initialState.canvass.visitsByAssignmentAndLocationId[ASSIGNMENT_ID] = {
         [LOCATION_ID]: remoteListLoaded([]),
       };
-      initialState.canvass.visitsByAssignmentId[ASSIGNMENT_ID] =
-        remoteListLoaded([]);
+      initialState.canvass.locationVisitsByAssignmentAndLocationId[
+        ASSIGNMENT_ID
+      ] = {
+        [LOCATION_ID]: remoteListLoaded([]),
+      };
       initialState.areaAssignments.areaAssignmentList.items.push(
         remoteItem(ASSIGNMENT_ID, {
           data: mockAreaAssignment({
@@ -288,6 +294,7 @@ describe('useVisitReporting()', () => {
       const store = createStore(initialState);
       const newVisit = mockLocationVisit({
         assignment_id: ASSIGNMENT_ID,
+        location_id: LOCATION_ID,
         metrics: [
           {
             metric_id: 10001,
@@ -336,8 +343,9 @@ describe('useVisitReporting()', () => {
 
       const stateAfterAction = store.getState();
       expect(
-        stateAfterAction.canvass.visitsByAssignmentId[ASSIGNMENT_ID].items[0]
-          .data
+        stateAfterAction.canvass.locationVisitsByAssignmentAndLocationId[
+          ASSIGNMENT_ID
+        ][LOCATION_ID].items[0].data
       ).toEqual(newVisit);
     });
 
@@ -363,6 +371,7 @@ describe('useVisitReporting()', () => {
       const store = createStore(initialState);
       const newVisit = mockLocationVisit({
         assignment_id: ASSIGNMENT_ID,
+        location_id: LOCATION_ID,
         metrics: [
           {
             metric_id: 10001,
@@ -408,6 +417,7 @@ describe('useVisitReporting()', () => {
       const store = createStore(initialState);
       const newVisit = mockLocationVisit({
         assignment_id: ASSIGNMENT_ID,
+        location_id: LOCATION_ID,
         metrics: [
           {
             metric_id: 10001,
@@ -463,8 +473,9 @@ describe('useVisitReporting()', () => {
 
       const stateAfterAction = store.getState();
       expect(
-        stateAfterAction.canvass.visitsByAssignmentId[ASSIGNMENT_ID].items[0]
-          .data
+        stateAfterAction.canvass.locationVisitsByAssignmentAndLocationId[
+          ASSIGNMENT_ID
+        ][LOCATION_ID].items[0].data
       ).toEqual(newVisit);
     });
 
@@ -476,29 +487,36 @@ describe('useVisitReporting()', () => {
         location_id: LOCATION_ID,
       });
 
-      initialState.canvass.visitsByAssignmentId[ASSIGNMENT_ID] = remoteList([
-        mockLocationVisit({
-          assignment_id: ASSIGNMENT_ID,
-          created: '1857-07-05T13:37:00.000Z', // Old
-          id: 10002,
-          location_id: LOCATION_ID,
-        }),
-        correctCurrentVisit,
-        mockLocationVisit({
-          assignment_id: ASSIGNMENT_ID,
-          id: 10003,
-          location_id: LOCATION_ID + 1, // Wrong location
-        }),
-        mockLocationVisit({
-          assignment_id: ASSIGNMENT_ID,
-          created_by_user_id: 2, // Some other user
-          id: 10004,
-          location_id: LOCATION_ID,
-        }),
-      ]);
+      initialState.canvass.locationVisitsByAssignmentAndLocationId[
+        ASSIGNMENT_ID
+      ] = {
+        [LOCATION_ID]: remoteList([
+          mockLocationVisit({
+            assignment_id: ASSIGNMENT_ID,
+            created: '1857-07-05T13:37:00.000Z', // Old
+            id: 10002,
+            location_id: LOCATION_ID,
+          }),
+          correctCurrentVisit,
+          mockLocationVisit({
+            assignment_id: ASSIGNMENT_ID,
+            created_by_user_id: 2, // Some other user
+            id: 10004,
+            location_id: LOCATION_ID,
+          }),
+        ]),
+        [LOCATION_ID + 1]: remoteList([
+          mockLocationVisit({
+            assignment_id: ASSIGNMENT_ID,
+            id: 10003,
+            location_id: LOCATION_ID + 1, // Wrong location
+          }),
+        ]),
+      };
 
-      initialState.canvass.visitsByAssignmentId[ASSIGNMENT_ID].loaded =
-        new Date().toISOString();
+      initialState.canvass.locationVisitsByAssignmentAndLocationId[
+        ASSIGNMENT_ID
+      ][LOCATION_ID].loaded = new Date().toISOString();
 
       const store = createStore(initialState);
 
@@ -516,6 +534,7 @@ describe('useVisitReporting()', () => {
       const store = createStore(initialState);
       const newVisit = mockLocationVisit({
         assignment_id: ASSIGNMENT_ID,
+        location_id: LOCATION_ID,
         metrics: [
           {
             metric_id: 10001,
@@ -569,8 +588,9 @@ describe('useVisitReporting()', () => {
 
       const stateAfterAction = store.getState();
       expect(
-        stateAfterAction.canvass.visitsByAssignmentId[ASSIGNMENT_ID].items[0]
-          .data
+        stateAfterAction.canvass.locationVisitsByAssignmentAndLocationId[
+          ASSIGNMENT_ID
+        ][LOCATION_ID].items[0].data
       ).toEqual(newVisit);
     });
 
@@ -582,12 +602,15 @@ describe('useVisitReporting()', () => {
         location_id: LOCATION_ID,
       });
 
-      initialState.canvass.visitsByAssignmentId[ASSIGNMENT_ID] = remoteList([
-        correctCurrentVisit,
-      ]);
+      initialState.canvass.locationVisitsByAssignmentAndLocationId[
+        ASSIGNMENT_ID
+      ] = {
+        [LOCATION_ID]: remoteList([correctCurrentVisit]),
+      };
 
-      initialState.canvass.visitsByAssignmentId[ASSIGNMENT_ID].loaded =
-        new Date().toISOString();
+      initialState.canvass.locationVisitsByAssignmentAndLocationId[
+        ASSIGNMENT_ID
+      ][LOCATION_ID].loaded = new Date().toISOString();
 
       const store = createStore(initialState);
 
@@ -687,6 +710,7 @@ describe('useVisitReporting()', () => {
       const store = createStore(initialState);
       const newVisit = mockLocationVisit({
         assignment_id: ASSIGNMENT_ID,
+        location_id: LOCATION_ID,
         metrics: [
           {
             metric_id: 10001,
@@ -747,9 +771,14 @@ describe('useVisitReporting()', () => {
 
       initialState.areaAssignments.locationsByAssignmentId[ASSIGNMENT_ID] =
         remoteList();
-      initialState.canvass.visitsByAssignmentId[ASSIGNMENT_ID] = remoteList();
-      initialState.canvass.visitsByAssignmentId[ASSIGNMENT_ID].loaded =
-        new Date().toISOString();
+      initialState.canvass.locationVisitsByAssignmentAndLocationId[
+        ASSIGNMENT_ID
+      ] = {
+        [LOCATION_ID]: remoteList(),
+      };
+      initialState.canvass.locationVisitsByAssignmentAndLocationId[
+        ASSIGNMENT_ID
+      ][LOCATION_ID].loaded = new Date().toISOString();
     });
 
     it('reportHouseholdVisits() triggers a PATCH call when a currentLocationVisit already exists', async () => {
@@ -758,11 +787,14 @@ describe('useVisitReporting()', () => {
         id: 77,
         location_id: LOCATION_ID,
       });
-      initialState.canvass.visitsByAssignmentId[ASSIGNMENT_ID] = remoteList([
-        todayVisit,
-      ]);
-      initialState.canvass.visitsByAssignmentId[ASSIGNMENT_ID].loaded =
-        new Date().toISOString();
+      initialState.canvass.locationVisitsByAssignmentAndLocationId[
+        ASSIGNMENT_ID
+      ] = {
+        [LOCATION_ID]: remoteList([todayVisit]),
+      };
+      initialState.canvass.locationVisitsByAssignmentAndLocationId[
+        ASSIGNMENT_ID
+      ][LOCATION_ID].loaded = new Date().toISOString();
 
       const store = createStore(initialState);
       const updatedVisit = {
@@ -815,15 +847,21 @@ describe('useVisitReporting()', () => {
       );
 
       const patched =
-        store.getState().canvass.visitsByAssignmentId[ASSIGNMENT_ID].items[0]
-          .data;
+        store.getState().canvass.locationVisitsByAssignmentAndLocationId[
+          ASSIGNMENT_ID
+        ][LOCATION_ID].items[0].data;
       expect(patched).toEqual(updatedVisit);
     });
 
     it('reportHouseholdVisits() triggers a POST call when no location visit exists', async () => {
-      initialState.canvass.visitsByAssignmentId[ASSIGNMENT_ID] = remoteList([]);
-      initialState.canvass.visitsByAssignmentId[ASSIGNMENT_ID].loaded =
-        new Date().toISOString();
+      initialState.canvass.locationVisitsByAssignmentAndLocationId[
+        ASSIGNMENT_ID
+      ] = {
+        [LOCATION_ID]: remoteList([]),
+      };
+      initialState.canvass.locationVisitsByAssignmentAndLocationId[
+        ASSIGNMENT_ID
+      ][LOCATION_ID].loaded = new Date().toISOString();
 
       const store = createStore(initialState);
       const newVisit = {
@@ -866,8 +904,9 @@ describe('useVisitReporting()', () => {
         expect.objectContaining({ metrics: expect.any(Array) })
       );
       const created =
-        store.getState().canvass.visitsByAssignmentId[ASSIGNMENT_ID].items[0]
-          .data;
+        store.getState().canvass.locationVisitsByAssignmentAndLocationId[
+          ASSIGNMENT_ID
+        ][LOCATION_ID].items[0].data;
       expect(created).toEqual(newVisit);
     });
   });
@@ -883,9 +922,14 @@ describe('useVisitReporting()', () => {
       };
       initialState.areaAssignments.locationsByAssignmentId[ASSIGNMENT_ID] =
         remoteList();
-      initialState.canvass.visitsByAssignmentId[ASSIGNMENT_ID] = remoteList();
-      initialState.canvass.visitsByAssignmentId[ASSIGNMENT_ID].loaded =
-        new Date().toISOString();
+      initialState.canvass.locationVisitsByAssignmentAndLocationId[
+        ASSIGNMENT_ID
+      ] = {
+        [LOCATION_ID]: remoteList(),
+      };
+      initialState.canvass.locationVisitsByAssignmentAndLocationId[
+        ASSIGNMENT_ID
+      ][LOCATION_ID].loaded = new Date().toISOString();
       initialState.areaAssignments.areaAssignmentList.items.push(
         remoteItem(ASSIGNMENT_ID, {
           data: mockAreaAssignment({
