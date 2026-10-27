@@ -1,6 +1,6 @@
 'use client';
 
-import { Alert, Box, Slide, Snackbar } from '@mui/material';
+import { Alert, Box, Slide, SlideProps, Snackbar } from '@mui/material';
 import { InfoOutlined } from '@mui/icons-material';
 import { FC, useMemo, useState } from 'react';
 
@@ -30,6 +30,17 @@ const HEIGHT_OF_NEW_UI_ALERT = '56px';
 type Props = {
   onResetAfterError: (urlToNavigateTo: string) => void;
 };
+
+const SwitchedAssignmentTransition: FC<SlideProps> = (props) => (
+  <Slide
+    {...props}
+    direction="right"
+    timeout={{
+      enter: 500,
+      exit: 300,
+    }}
+  />
+);
 
 const NewUIAlert: FC<{ assignmentId: number }> = ({ assignmentId }) => {
   const messages = useMessages(messageIds);
@@ -231,20 +242,7 @@ const Call: FC<Props> = ({ onResetAfterError }) => {
           }
         }}
         open={!!assignmentSwitchedTo}
-        slots={{
-          transition: (props) => {
-            return (
-              <Slide
-                {...props}
-                direction="right"
-                timeout={{
-                  enter: 500,
-                  exit: 300,
-                }}
-              />
-            );
-          },
-        }}
+        slots={{ transition: SwitchedAssignmentTransition }}
         sx={{
           '@media (min-width: 600px)': {
             bottom: 68,
