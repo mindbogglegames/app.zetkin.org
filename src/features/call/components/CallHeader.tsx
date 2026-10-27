@@ -1,5 +1,5 @@
 import { QrCode, SkipNext } from '@mui/icons-material';
-import { FC, useState } from 'react';
+import { FC, Fragment, useState } from 'react';
 import { Box } from '@mui/material';
 
 import { LaneState, LaneStep, Report, UnfinishedCall } from '../types';
@@ -74,8 +74,8 @@ const CallHeader: FC<Props> = ({
   } = useAllocateCall(assignment.organization.id, assignment.id);
   const submitReport = useSubmitReport(assignment.organization.id);
 
-  const phoneNumbers = [call?.target.phone, call?.target.alt_phone].filter(
-    notEmpty
+  const phoneNumbers = Array.from(
+    new Set([call?.target.phone, call?.target.alt_phone].filter(notEmpty))
   );
 
   const encodedName = encodeURIComponent(
@@ -158,12 +158,12 @@ const CallHeader: FC<Props> = ({
               sx={{ fontFamily: 'monospace' }}
               variant="headingLg"
             >
-              {phoneNumbers.flatMap((phone, index) => {
-                return [
-                  index > 0 ? '/' : null,
-                  <ZUILink key={phone} href={`tel:${phone}`} text={phone} />,
-                ];
-              })}
+              {phoneNumbers.map((phone, index) => (
+                <Fragment key={phone}>
+                  {index > 0 && '/'}
+                  <ZUILink href={`tel:${phone}`} text={phone} />
+                </Fragment>
+              ))}
             </ZUIText>
             <ZUIIconButton
               icon={QrCode}
