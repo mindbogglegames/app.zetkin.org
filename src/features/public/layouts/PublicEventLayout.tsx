@@ -12,6 +12,7 @@ import messageIds from 'features/organizations/l10n/messageIds';
 import ZUITimeSpan from 'zui/ZUITimeSpan';
 import useIsMobile from 'utils/hooks/useIsMobile';
 import useEvent from 'features/events/hooks/useEvent';
+import getEventUrl from 'features/events/utils/getEventUrl';
 
 type Props = PropsWithChildren<{
   eventId: number;
@@ -40,6 +41,10 @@ export const PublicEventLayout: FC<Props> = ({ children, eventId, orgId }) => {
         >
           <Box bgcolor="white">
             <ActivistPortalHeader
+              organizeLink={{
+                href: getEventUrl(event),
+                orgId: event.organization.id,
+              }}
               subtitle={
                 <Box
                   sx={{

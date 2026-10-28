@@ -17,6 +17,10 @@ import useUserMemberships from 'features/public/hooks/useUserMemberships';
 
 type Props = {
   button?: JSX.Element;
+  organizeLink?: {
+    href: string;
+    orgId: number;
+  };
   selectedTab?: string;
   subtitle?: string | JSX.Element;
   tabs?: ZUITabbedNavBarProps['items'];
@@ -27,6 +31,7 @@ type Props = {
 const ActivistPortalHeader: FC<Props> = ({
   tabs,
   button,
+  organizeLink,
   selectedTab,
   subtitle,
   title,
@@ -42,6 +47,14 @@ const ActivistPortalHeader: FC<Props> = ({
 
   const memberships = useUserMemberships();
   const isOfficial = memberships.find((membership) => membership.role != null);
+  const isOfficialInLinkedOrg =
+    !!organizeLink &&
+    memberships.some(
+      (membership) =>
+        membership.organization.id == organizeLink.orgId &&
+        membership.role != null
+    );
+  const organizeHref = isOfficialInLinkedOrg ? organizeLink.href : '/organize';
 
   const menuItems: MenuItem[] = useMemo(
     () => [
@@ -53,7 +66,7 @@ const ActivistPortalHeader: FC<Props> = ({
         ? [
             {
               label: messages.home.menu.organize(),
-              onClick: () => router.push('/organize'),
+              onClick: () => router.push(organizeHref),
             },
           ]
         : []),
@@ -68,7 +81,7 @@ const ActivistPortalHeader: FC<Props> = ({
         startIcon: Logout,
       },
     ],
-    [messages, router, isOfficial]
+    [messages, router, isOfficial, organizeHref]
   );
 
   return (
@@ -102,7 +115,7 @@ const ActivistPortalHeader: FC<Props> = ({
             <Box>
               {isOfficial && (
                 <ZUIButton
-                  href="/organize"
+                  href={organizeHref}
                   label={messages.home.header.organize()}
                 />
               )}
