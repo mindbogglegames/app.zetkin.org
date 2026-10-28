@@ -50,6 +50,10 @@ const PublicProjectLayout: FC<Props> = ({ children, project }) => {
               ]}
             />
           }
+          organizeLink={{
+            href: `/organize/${project.organization.id}/projects/${project.id}`,
+            orgId: project.organization.id,
+          }}
           subtitle={project.info_text}
           title={project.title}
           topLeftComponent={
