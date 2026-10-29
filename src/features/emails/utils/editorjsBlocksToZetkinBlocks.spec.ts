@@ -119,4 +119,56 @@ describe('editorjsBlocksToZetkinBlocks()', () => {
       },
     ]);
   });
+
+  it('gives copied links and buttons unique tags', () => {
+    const zetkinBlocks = editorjsBlocksToZetkinBlocks([
+      {
+        data: {
+          text: '<a class="inlineLink" href="http://zetkin.org" data-tag="abcdefgh">Zetkin</a>',
+        },
+        type: BLOCK_TYPES.PARAGRAPH,
+      },
+      {
+        data: {
+          text: '<b><a class="inlineLink" href="http://zetkin.org" data-tag="abcdefgh">Zetkin</a></b>',
+        },
+        type: BLOCK_TYPES.PARAGRAPH,
+      },
+      {
+        data: {
+          buttonText: 'Click me!',
+          tag: 'abcdefgh',
+          url: 'http://zetkin.org',
+        },
+        type: BLOCK_TYPES.BUTTON,
+      },
+    ]);
+
+    const [first, second, button] = zetkinBlocks;
+    if (
+      first.kind !== BlockKind.PARAGRAPH ||
+      second.kind !== BlockKind.PARAGRAPH ||
+      button.kind !== BlockKind.BUTTON
+    ) {
+      throw new Error('Unexpected block kinds');
+    }
+
+    const firstLink = first.data.content[0];
+    const bold = second.data.content[0];
+    if (
+      firstLink.kind !== InlineNodeKind.LINK ||
+      bold.kind !== InlineNodeKind.BOLD
+    ) {
+      throw new Error('Unexpected node kinds');
+    }
+    const secondLink = bold.content[0];
+    if (secondLink.kind !== InlineNodeKind.LINK) {
+      throw new Error('Unexpected node kind');
+    }
+
+    const tags = [firstLink.tag, secondLink.tag, button.data.tag];
+    expect(firstLink.tag).toBe('abcdefgh');
+    expect(new Set(tags).size).toBe(3);
+    tags.forEach((tag) => expect(tag).toMatch(/^[a-z0-9]+$/));
+  });
 });
