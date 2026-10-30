@@ -1,11 +1,4 @@
-import {
-  FC,
-  startTransition,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { FC, startTransition, useContext, useEffect, useState } from 'react';
 import { latLngBounds, Map as MapType } from 'leaflet';
 import { MapContainer } from 'react-leaflet';
 import { useRouter } from 'next/router';
@@ -88,8 +81,8 @@ const OrganizerMap: FC<OrganizerMapProps> = ({
     router.query.navigateToAreaId?.toString() ?? '0'
   );
 
-  const mapRef = useRef<MapType | null>(null);
-  useAutoResizeMap(mapRef.current);
+  const [map, setMap] = useState<MapType | null>(null);
+  useAutoResizeMap(map);
 
   const selectedArea = areas.find((area) => area.id == selectedId);
 
@@ -157,9 +150,8 @@ const OrganizerMap: FC<OrganizerMapProps> = ({
     >
       <Box flexGrow={1} position="relative" zIndex={0}>
         <MapControls
-          map={mapRef.current}
+          map={map}
           onFitBounds={() => {
-            const map = mapRef.current;
             if (map) {
               if (areas.length) {
                 // Start with first area
@@ -359,7 +351,7 @@ const OrganizerMap: FC<OrganizerMapProps> = ({
           </Paper>
         )}
         <MapContainer
-          ref={mapRef}
+          ref={setMap}
           attributionControl={false}
           center={[0, 0]}
           style={{ height: '100%', width: '100%' }}
