@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import singletonRouter from 'next/router';
 import userEvent from '@testing-library/user-event';
-import { waitFor } from '@testing-library/react';
+import { fireEvent, waitFor } from '@testing-library/react';
 
 import messageIds from 'features/tags/l10n/messageIds';
 import mockTag, { mockAppliedTag } from 'utils/testing/mocks/mockTag';
@@ -66,18 +66,18 @@ describe('<TagManagerController />', () => {
       }),
       mockAppliedTag({
         group: { id: 2, title: 'Skills' },
-        id: 4,
+        id: 5,
         title: 'Phone banking',
       }),
       // Ungrouped tags
       mockAppliedTag({
         group: null,
-        id: 5,
+        id: 6,
         title: 'Vegan',
       }),
       mockAppliedTag({
         group: null,
-        id: 5,
+        id: 7,
         title: 'Listens to progg',
       }),
     ];
@@ -261,7 +261,7 @@ describe('<TagManagerController />', () => {
 
       const tagSearchField = getByTestId('TagManager-TagSelect-searchField');
       await userEvent.click(tagSearchField);
-      await userEvent.keyboard("Jerry's family");
+      fireEvent.change(tagSearchField, { target: { value: "Jerry's family" } });
 
       const createTagOption = getByTestId(
         'TagManager-TagSelect-createTagOption'
