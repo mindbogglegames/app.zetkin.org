@@ -142,6 +142,20 @@ const EmailEditorFrontend: FC<EmailEditorFrontendProps> = ({
   }, []);
 
   useEffect(() => {
+    const onMouseDown = (ev: MouseEvent) => {
+      const holder = document.getElementById('ClientOnlyEditor-container');
+      if (holder && ev.target instanceof Node && !holder.contains(ev.target)) {
+        window.getSelection()?.removeAllRanges();
+      }
+    };
+
+    window.addEventListener('mousedown', onMouseDown, true);
+    return () => {
+      window.removeEventListener('mousedown', onMouseDown, true);
+    };
+  }, []);
+
+  useEffect(() => {
     const timer = setInterval(async () => {
       await editorInstance.current?.isReady;
 
