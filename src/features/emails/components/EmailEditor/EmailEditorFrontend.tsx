@@ -18,6 +18,7 @@ import { useMessages } from 'core/i18n';
 import { useNumericRouteParams } from 'core/hooks';
 import variableToolFactory from './tools/inlineVariable';
 import ParagraphWithSpanPaste from './tools/paragraphWithSpanPaste';
+import splitLinesIntoParagraphs from './utils/splitLinesIntoParagraphs';
 import { useNonce } from 'core/hooks/useNonce';
 
 export type EmailEditorFrontendProps = {
@@ -121,6 +122,32 @@ const EmailEditorFrontend: FC<EmailEditorFrontendProps> = ({
     // Create the EditorJS instance
     editorInstance.current = new EditorJS(editorConfig);
 
+    const holder = document.getElementById('ClientOnlyEditor-container');
+    const onPaste = (event: ClipboardEvent) => {
+      const clipboard = event.clipboardData;
+      const html = clipboard?.getData('text/html');
+      if (
+        !clipboard ||
+        !html ||
+        !/<br/i.test(html) ||
+        clipboard.types.includes('Files')
+      ) {
+        return;
+      }
+
+      const data = new DataTransfer();
+      clipboard.types.forEach((type) => {
+        data.setData(
+          type,
+          type == 'text/html'
+            ? splitLinesIntoParagraphs(html)
+            : clipboard.getData(type)
+        );
+      });
+      Object.defineProperty(event, 'clipboardData', { value: data });
+    };
+    holder?.addEventListener('paste', onPaste, true);
+
     const setEditorJSApiRef = async () => {
       await editorInstance.current?.isReady;
       apiRef.current = editorInstance.current;
@@ -129,6 +156,7 @@ const EmailEditorFrontend: FC<EmailEditorFrontendProps> = ({
     setEditorJSApiRef();
 
     return () => {
+      holder?.removeEventListener('paste', onPaste, true);
       // Cleanup when the component is unmounted
       if (editorInstance.current) {
         try {
